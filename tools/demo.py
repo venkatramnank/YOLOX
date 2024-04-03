@@ -219,7 +219,7 @@ def image_demo(predictor, vis_folder, path, current_time, save_result, save_txt)
                     if output is not None:
                         for id, obj in enumerate(output):
                             output_cpu = obj.cpu()
-                            f.write(f"{id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item() * output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
+                            f.write(f"{id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item()} {output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
         ch = cv2.waitKey(0)
         if ch == 27 or ch == ord("q") or ch == ord("Q"):
             break
@@ -276,7 +276,7 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
                         if output is not None:
                             for id, obj in enumerate(output):
                                 output_cpu = obj.cpu()
-                                f.write(f"{frame_count} {id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item() * output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
+                                f.write(f"{frame_count} {id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item()} {output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
             ch = cv2.waitKey(0)
                 
             ch = cv2.waitKey(1)
