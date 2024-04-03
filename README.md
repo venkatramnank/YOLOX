@@ -100,6 +100,11 @@ Demo for video:
 python tools/demo.py video -n yolox-s -c /path/to/your/yolox_s.pth --path /path/to/your/video --conf 0.25 --nms 0.45 --tsize 640 --save_result --device [cpu/gpu]
 ```
 
+Demo for image or video for saving the results in text file:
+```shell
+python tools/demo.py image -n yolox-l -c /path/to/your/yolox_l.pth --path assets/dog.jpg --conf 0.25 --nms 0.45 --tsize 640 --save_result --device gpu --save_txt
+
+```
 
 </details>
 
