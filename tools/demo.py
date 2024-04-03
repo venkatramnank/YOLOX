@@ -83,6 +83,11 @@ def make_parser():
         action="store_true",
         help="Using TensorRT model for testing.",
     )
+    parser.add_argument(
+        "--save_txt",
+        action="store_true",
+        help="Save results in txt file"
+    )
     return parser
 
 
@@ -184,7 +189,7 @@ class Predictor(object):
         return vis_res
 
 
-def image_demo(predictor, vis_folder, path, current_time, save_result):
+def image_demo(predictor, vis_folder, path, current_time, save_result, save_txt):
     if os.path.isdir(path):
         files = get_image_list(path)
     else:
@@ -201,6 +206,20 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
             save_file_name = os.path.join(save_folder, os.path.basename(image_name))
             logger.info("Saving detection result in {}".format(save_file_name))
             cv2.imwrite(save_file_name, result_image)
+        if save_txt:
+            save_folder = os.path.join(
+                vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
+            )
+            os.makedirs(save_folder, exist_ok=True)
+            file_path_to_store = os.path.join(save_folder, os.path.splitext(os.path.basename(image_name))[0]) + '_results.txt'
+            logger.info("Saving detection result in {}".format(file_path_to_store))
+            with open(file_path_to_store, 'a') as f:
+                f.write(f"File: {os.path.basename(image_name)}\n")
+                for output in outputs:
+                    if output is not None:
+                        for id, obj in enumerate(output):
+                            output_cpu = obj.cpu()
+                            f.write(f"{id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item() * output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
         ch = cv2.waitKey(0)
         if ch == 27 or ch == ord("q") or ch == ord("Q"):
             break
@@ -224,9 +243,20 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
         vid_writer = cv2.VideoWriter(
             save_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (int(width), int(height))
         )
+    frame_count = 0
+    if args.save_txt:
+        save_folder = os.path.join(
+            vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
+        )
+        os.makedirs(save_folder, exist_ok=True)
+        file_path_to_store = os.path.join(save_folder, os.path.splitext(os.path.basename(args.path))[0]) + '_results.txt'
+        logger.info("Saving detection result in {}".format(file_path_to_store))
+        with open(file_path_to_store, 'a') as f:
+            f.write(f"File: {args.path}\n")
     while True:
         ret_val, frame = cap.read()
         if ret_val:
+            frame_count += 1
             outputs, img_info = predictor.inference(frame)
             result_frame = predictor.visual(outputs[0], img_info, predictor.confthre)
             if args.save_result:
@@ -234,6 +264,21 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
             else:
                 cv2.namedWindow("yolox", cv2.WINDOW_NORMAL)
                 cv2.imshow("yolox", result_frame)
+            if args.save_txt:
+                save_folder = os.path.join(
+                vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
+                )
+                os.makedirs(save_folder, exist_ok=True)
+                file_path_to_store = os.path.join(save_folder, os.path.splitext(os.path.basename(args.path))[0]) + '_results.txt'
+                logger.info("Saving detection result in {}".format(file_path_to_store))
+                with open(file_path_to_store, 'a') as f:
+                    for output in outputs:
+                        if output is not None:
+                            for id, obj in enumerate(output):
+                                output_cpu = obj.cpu()
+                                f.write(f"{frame_count} {id} {output_cpu[0].item()} {output_cpu[1].item()} {output_cpu[2].item()} {output_cpu[3].item()}  {output_cpu[4].item() * output_cpu[5].item()} {predictor.cls_names[int(output_cpu[6].item())]} \n")
+            ch = cv2.waitKey(0)
+                
             ch = cv2.waitKey(1)
             if ch == 27 or ch == ord("q") or ch == ord("Q"):
                 break
@@ -242,6 +287,7 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
 
 
 def main(exp, args):
+
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
 
@@ -308,7 +354,7 @@ def main(exp, args):
     )
     current_time = time.localtime()
     if args.demo == "image":
-        image_demo(predictor, vis_folder, args.path, current_time, args.save_result)
+        image_demo(predictor, vis_folder, args.path, current_time, args.save_result, args.save_txt)
     elif args.demo == "video" or args.demo == "webcam":
         imageflow_demo(predictor, vis_folder, current_time, args)
 
